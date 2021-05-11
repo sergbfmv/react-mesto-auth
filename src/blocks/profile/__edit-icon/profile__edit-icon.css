@@ -1,0 +1,14 @@
+.profile__edit-icon {
+  position: absolute;
+  top: 47px;
+  left: 47px;
+  opacity: 1;
+  transition: opacity 0.4s ease;
+  cursor: pointer;
+  visibility: hidden;
+}
+
+.profile__edit-icon:hover {
+  opacity: 0.2;
+  visibility: visible;
+}
