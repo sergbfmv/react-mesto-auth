@@ -2,11 +2,14 @@ import React from 'react'
 import Card from '../components/Card'
 import edit from '../images/edit.svg'
 import { CurrentUserContext } from '../contexts/CurrentUserContext'
+import Header from './Header'
 
 function Main(props) {
   const currentUser= React.useContext(CurrentUserContext)
   
   return (
+    <>
+    <Header path='' text='Выйти' mail={props.path} userMail={props.mail} />
     <main>
     <section className="profile-columns">
       <div className="profile">
@@ -29,6 +32,7 @@ function Main(props) {
       )})}
     </section>
   </main>
+  </>
   )
 }
 export default Main

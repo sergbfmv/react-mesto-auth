@@ -1,5 +1,5 @@
 import React from 'react'
-import Header from '../components/Header'
+import { Route, Switch, Redirect, useHistory } from 'react-router-dom'
 import Main from '../components/Main'
 import Footer from '../components/Footer'
 import ImagePopup from './ImagePopup'
@@ -8,6 +8,10 @@ import EditProfilePopup from './EditProfilePopup'
 import { CurrentUserContext } from '../contexts/CurrentUserContext'
 import EditAvatarPopup from './EditAvatarPopup'
 import AddPlacePopup from './AddPlacePopup'
+import Login from './Login'
+import Register from './Register'
+import ProtectedRoute from './ProtectedRoute'
+import * as auth from '../auth';
 
 function App() {
   const [isEditProfilePopupOpen, setProfilePopupOpen] = React.useState(false)
@@ -16,6 +20,43 @@ function App() {
   const [selectedCard, setSelectedCard] = React.useState({})
   const [currentUser, setCurrentUser] = React.useState({})
   const [cards, setCards] = React.useState([])
+  const [loggedIn, setLoggedIn] = React.useState(false)
+  const [userEmail, setUserEmail] = React.useState('')
+  const history = useHistory()
+
+  function handleLogin(e) {
+    e.preventDefault();
+    setLoggedIn({
+      loggedIn: true
+    })
+  }
+
+  function tokenCheck () {
+    // если у пользователя есть токен в localStorage, 
+    // эта функция проверит, действующий он или нет
+ 
+      const jwt = localStorage.getItem('jwt');
+      if (jwt){
+        // проверим токен
+        auth.getContent(jwt).then((res) => {
+          if (res){
+            setUserEmail(res.data.email)
+                    // авторизуем пользователя
+            setLoggedIn({
+              loggedIn: true,
+            });
+                        // обернём App.js в withRouter
+                        // так, что теперь есть доступ к этому методу
+              history.push('/');
+            };
+          }
+        );
+      }
+  }
+
+  React.useEffect(() => {
+    tokenCheck()
+  }, [])
 
   function handleEditAvatarClick() {
     setAvatarPopupOpen(!isEditAvatarPopupOpen)
@@ -104,25 +145,41 @@ function App() {
   }, [])
 
   return (
-  <CurrentUserContext.Provider value={currentUser}>
-    <div className="page">
-      <Header />
-      <Main 
-        cards={cards} 
-        onCardLike={handleCardLike} 
-        onCardDelete={handleCardDelete} 
-        onEditProfile={handleEditProfileClick} 
-        onAddPlace={handleAddPlaceClick} 
-        onEditAvatar={handleEditAvatarClick} 
-        onCardClick={handleCardClick} 
-      />
-      <Footer />
-      <EditProfilePopup isOpen={isEditProfilePopupOpen} onClose={closeAllPopups} onUpdateUser={handleUpdateUser} />
-      <AddPlacePopup isOpen={isAddPlacePopupOpen} onClose={closeAllPopups} onAddPlace={handleAddPlace} />
-      <EditAvatarPopup isOpen={isEditAvatarPopupOpen} onClose={closeAllPopups} onUpdateAvatar={handleUpdateAvatar} />
-      <ImagePopup card = {selectedCard} onClose = {closeAllPopups} />
-    </div>
-  </CurrentUserContext.Provider>
+      <CurrentUserContext.Provider value={currentUser}>
+        <div className="page">
+            <main className="reg">
+              <Switch>
+                <Route path="/sign-in">
+                  <Login handleLogin = {handleLogin} mail={setUserEmail} />
+                </Route>
+                <Route path="/sign-up">
+                  <Register />
+                </Route>
+                <ProtectedRoute
+                  path="/"
+                  loggedIn={loggedIn}
+                  component={Main}
+                  cards={cards} 
+                  onCardLike={handleCardLike} 
+                  onCardDelete={handleCardDelete} 
+                  onEditProfile={handleEditProfileClick} 
+                  onAddPlace={handleAddPlaceClick} 
+                  onEditAvatar={handleEditAvatarClick} 
+                  onCardClick={handleCardClick}
+                  mail={userEmail}
+                />
+                <Route>
+                  {loggedIn ? <Redirect to="/" /> : <Redirect to="/sign-in" />}
+                </Route>
+              </Switch>
+            </main>
+          <Footer />
+          <EditProfilePopup isOpen={isEditProfilePopupOpen} onClose={closeAllPopups} onUpdateUser={handleUpdateUser} />
+          <AddPlacePopup isOpen={isAddPlacePopupOpen} onClose={closeAllPopups} onAddPlace={handleAddPlace} />
+          <EditAvatarPopup isOpen={isEditAvatarPopupOpen} onClose={closeAllPopups} onUpdateAvatar={handleUpdateAvatar} />
+          <ImagePopup card = {selectedCard} onClose = {closeAllPopups} />
+        </div>
+      </CurrentUserContext.Provider>
   );
 }
 
