@@ -1,7 +1,6 @@
 import Header from './Header'
 import React from 'react';
 import { withRouter } from 'react-router-dom';
-import * as auth from '../auth';
 
 class Login extends React.Component {
   constructor(props){
@@ -23,22 +22,8 @@ class Login extends React.Component {
   }
 
   handleSubmit(e){
-        e.preventDefault()
-    if (!this.state.email || !this.state.password){
-      return;
-    }
-    auth.authorize(this.state.password, this.state.email)
-    .then((data) => {
-      if (data.token){
-        const mail = this.state.email
-        this.props.mail(mail)
-        this.setState({password: '', email: ''} ,() => {
-            this.props.handleLogin(e);
-            this.props.history.push('/');
-        })
-      }  
-    })
-    .catch(err => console.log(err)); // запускается, если пользователь не найден
+    e.preventDefault()
+    this.props.onLogin(e, this.state.password, this.state.email)
   }
 
 render() {

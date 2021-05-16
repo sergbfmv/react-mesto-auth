@@ -11,7 +11,10 @@ import AddPlacePopup from './AddPlacePopup'
 import Login from './Login'
 import Register from './Register'
 import ProtectedRoute from './ProtectedRoute'
-import * as auth from '../auth';
+import * as auth from '../utils/auth';
+import regOk from '../images/regOk.svg'
+import regNotOk from '../images/regNotOk.svg'
+import InfoTooltip from './InfoTooltip'
 
 function App() {
   const [isEditProfilePopupOpen, setProfilePopupOpen] = React.useState(false)
@@ -22,6 +25,9 @@ function App() {
   const [cards, setCards] = React.useState([])
   const [loggedIn, setLoggedIn] = React.useState(false)
   const [userEmail, setUserEmail] = React.useState('')
+  const [isInfoTooltipOpen, setIsInfoTooltipOpen] = React.useState(false)
+  const [messageInfoTooltip, setMessageInfoTooltip] = React.useState('')
+  const [imageInfoTooltip, setImageInfoTooltip] = React.useState('')
   const history = useHistory()
 
   function handleLogin(e) {
@@ -53,10 +59,6 @@ function App() {
         );
       }
   }
-
-  React.useEffect(() => {
-    tokenCheck()
-  }, [])
 
   function handleEditAvatarClick() {
     setAvatarPopupOpen(!isEditAvatarPopupOpen)
@@ -121,6 +123,22 @@ function App() {
       .catch(err => Promise.reject(err))
   }
 
+  function handleInfoTooltipOpen(message, image) {
+    setIsInfoTooltipOpen(true)
+    setMessageInfoTooltip(message)
+    setImageInfoTooltip(image)
+  }
+
+  function handleInfoTooltipClose() {
+    const check = imageInfoTooltip
+    setIsInfoTooltipOpen(false)
+    setMessageInfoTooltip('')
+    setImageInfoTooltip('')
+    if (check === regOk) {
+      history.push('/sign-in')
+    }
+  }
+
   function closeAllPopups() {
     setAvatarPopupOpen(false)
     setProfilePopupOpen(false)
@@ -128,20 +146,54 @@ function App() {
     setSelectedCard({})
   }
 
+  function handleOnLogin (e, password, email) {
+    auth.authorize(password, email)
+      .then((data) => {
+        if (data.token) {
+          const mail = email
+          setUserEmail(mail)
+          handleLogin(e);
+          history.push('/');
+      }
+    })
+      .catch(err => console.log(err)); // запускается, если пользователь не найден
+}
+
+function handleOnRegister (password, email) {
+  console.log(password, email)
+  auth.register(password, email)
+    .then((res) => {
+      if(!res.error && !res.message) {
+        handleInfoTooltipOpen('Вы успешно зарегистрировались!', regOk)
+      } else {
+        handleInfoTooltipOpen('Что-то пошло не так! Попробуйте ещё раз.', regNotOk)
+      }
+  })
+  .catch(err => console.log(err));
+}
+
   React.useEffect(() => {
+    if (loggedIn) {
       api.getProfileInfo()
         .then((data) => {
           setCurrentUser(data)
         })
         .catch(err => Promise.reject(err))
-    }, [])
+      }
+    }, [loggedIn])
 
     React.useEffect(() => {
+      if (loggedIn) {
       api.getInitialCards()
         .then((items) => {
           setCards(items)
       })
         .catch(err => Promise.reject(err))
+    }
+  }, [loggedIn])
+
+  React.useEffect(() => {
+    tokenCheck()
   }, [])
 
   return (
@@ -150,10 +202,10 @@ function App() {
             <main className="reg">
               <Switch>
                 <Route path="/sign-in">
-                  <Login handleLogin = {handleLogin} mail={setUserEmail} />
+                  <Login handleLogin = {handleLogin} mail={setUserEmail} onLogin={handleOnLogin} />
                 </Route>
                 <Route path="/sign-up">
-                  <Register />
+                  <Register onRegister={handleOnRegister} />
                 </Route>
                 <ProtectedRoute
                   path="/"
@@ -178,6 +230,12 @@ function App() {
           <AddPlacePopup isOpen={isAddPlacePopupOpen} onClose={closeAllPopups} onAddPlace={handleAddPlace} />
           <EditAvatarPopup isOpen={isEditAvatarPopupOpen} onClose={closeAllPopups} onUpdateAvatar={handleUpdateAvatar} />
           <ImagePopup card = {selectedCard} onClose = {closeAllPopups} />
+          <InfoTooltip 
+            isOpen={isInfoTooltipOpen} 
+            image={imageInfoTooltip} 
+            text={messageInfoTooltip} 
+            onClose={handleInfoTooltipClose} 
+          />
         </div>
       </CurrentUserContext.Provider>
   );
