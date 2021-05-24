@@ -30,7 +30,6 @@ class Register extends React.Component {
 
   render() {
   return(
-    <>
     <section className="login">
       <Header to='/sign-in' text='Войти' />
       <div className="login__container">
@@ -45,11 +44,10 @@ class Register extends React.Component {
             <span className="info-input-error login__placeholder-error"></span>
           </label>
           <button type="submit" name="login" className="login__button">Зарегистрироваться</button>
-          <p className="login__text">Уже зарегистрированы? <Link to='/' className="login__link">Войти</Link></p>
+          <p className="login__text">Уже зарегистрированы? <Link to='/sign-in' className="login__link">Войти</Link></p>
         </form>
       </div>
     </section>
-    </>
   )
 }
 }

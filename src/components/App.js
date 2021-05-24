@@ -31,7 +31,6 @@ function App() {
   const history = useHistory()
 
   function handleLogin(e) {
-    e.preventDefault();
     setLoggedIn({
       loggedIn: true
     })
